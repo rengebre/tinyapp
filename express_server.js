@@ -19,6 +19,13 @@ const checkURLDatabase = function(link, dataObj) {
   return;
 };
 
+// check if long url has a leading "http://"
+const checkLeadingHttp = function(url) {
+  if(url.trim().slice(7) !== "http://") {
+    return "http://" + url;
+  }
+  return url;
+}
 //generate RandomString of 'n' number of characters. numbers in the if are the gaps between numbers -> capitals -> lower case letters which we do not want to pull from. Skip them and don't count that loop.
 const generateRandomString = function(n) {
   let retStr = "";
@@ -61,9 +68,10 @@ app.post("/urls", (req, res) => {
   let longURL = req.body.longURL;
 
   // check if website entered starts with http:\\, if not, add it for redirect method
-  if (longURL.trim().slice(7) !== "http://") {
-    longURL = "http://" + longURL;
-  }
+  // if (longURL.trim().slice(7) !== "http://") {
+  //   longURL = "http://" + longURL;
+  // }
+  longURL = checkLeadingHttp(longURL);
 
   // check if website link already has an existing shortURL, act accordingly
   let checkKey = checkURLDatabase(req.body.longURL, urlDatabase);
@@ -119,6 +127,15 @@ app.get("/urls/:shortURL/delete", (req, res) =>{
   res.status(404).send("404 - Why?... just, why? (⊙_☉)")
 });
 
+app.post("/urls/:id", (req, res) => {
+  const shortURL = req.params.id;
+  const longURL = req.body.longURL;
+
+  if (urlDatabase[shortURL]) {
+    urlDatabase[shortURL] = checkLeadingHttp(longURL);
+  }
+  res.redirect("/urls");
+});
 
 // app.get("/hello", (req, res) => {
 //   res.send("<html><body>Hello <b>World</b></body></html>\n");
