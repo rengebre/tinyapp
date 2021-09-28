@@ -3,7 +3,6 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 
-app.set('view engine', 'ejs');
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -35,22 +34,28 @@ const generateRandomString = function(n) {
   }
   return retStr;
 }
+// set our template engine
+app.set('view engine', 'ejs');
 
+// Middleware -> express urlencoded to parse buffer data
 app.use(express.urlencoded({extended: true}));
 
+// GET: request the home page
 app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
+// app.get("/urls.json", (req, res) => {
+//   res.json(urlDatabase);
+// });
 
+// GET: request for /urls html page
 app.get("/urls", (req, res) => {
   const templateVars = { urls: urlDatabase };
   res.render("urls_index", templateVars);
 });
 
+// POST request for /urls -> creating new shortURL
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(6);
   let longURL = req.body.longURL;
@@ -71,10 +76,12 @@ app.post("/urls", (req, res) => {
   }
 });
 
+// GET: request for new URL page
 app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
+// GET: request for shortURL page
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
 
@@ -86,6 +93,7 @@ app.get("/urls/:shortURL", (req, res) => {
   res.status(404).send("404 - TinyLink does not exist");
 });
 
+// GET: redirect to the longURL linked to shortURL
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if(urlDatabase[shortURL]) {
@@ -95,9 +103,26 @@ app.get("/u/:shortURL", (req, res) => {
   res.status(404).send("404 - TinyLink does not exist");
 });
 
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+// POST: request to delete a shortURL/longURL combo in our "database"
+app.post("/urls/:shortURL/delete", (req, res) =>{
+  const shortURL = req.params.shortURL;
+  if (urlDatabase[shortURL]) {
+    delete urlDatabase[shortURL];
+    res.redirect("/urls");
+    return;
+  }
+  res.status(404).send("404 - How you get here?? (⊙_☉)")
 });
+
+// GET: if the user is trying to manually access delete page, catch this and ponder their life choices
+app.get("/urls/:shortURL/delete", (req, res) =>{
+  res.status(404).send("404 - Why?... just, why? (⊙_☉)")
+});
+
+
+// app.get("/hello", (req, res) => {
+//   res.send("<html><body>Hello <b>World</b></body></html>\n");
+// });
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
