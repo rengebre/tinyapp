@@ -10,7 +10,17 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-//generate RandomString of 'n' number of characters
+// check if link already in our database. return the existing key if it is, undefined if not.
+const checkURLDatabase = function(link, dataObj) {
+  for (const key in dataObj) {
+    if (dataObj[key] === link) {
+      return key;
+    }
+  }
+  return;
+};
+
+//generate RandomString of 'n' number of characters. numbers in the if are the gaps between numbers -> capitals -> lower case letters which we do not want to pull from. Skip them and don't count that loop.
 const generateRandomString = function(n) {
   let retStr = "";
   const min = 48;
@@ -43,9 +53,22 @@ app.get("/urls", (req, res) => {
 
 app.post("/urls", (req, res) => {
   let shortURL = generateRandomString(6);
-  urlDatabase[shortURL] = req.body.longURL;
-  // console.log(req.body);
-  res.send(urlDatabase);
+  let longURL = req.body.longURL;
+
+  // check if website entered starts with http:\\, if not, add it for redirect method
+  if (longURL.trim().slice(7) !== "http://") {
+    longURL = "http://" + longURL;
+  }
+
+  // check if website link already has an existing shortURL, act accordingly
+  let checkKey = checkURLDatabase(req.body.longURL, urlDatabase);
+
+  if (!checkKey) {
+    urlDatabase[shortURL] = longURL;
+    res.redirect(`/urls/${shortURL}`);
+  } else {
+    res.redirect(`/urls/${checkKey}`);
+  }
 });
 
 app.get("/urls/new", (req, res) => {
@@ -54,8 +77,22 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
-  const templateVars = { shortURL, longURL: urlDatabase[shortURL]};
-  res.render('urls_show', templateVars);
+
+  if(urlDatabase[shortURL]) {
+    const templateVars = { shortURL, longURL: urlDatabase[shortURL]};
+    res.render('urls_show', templateVars);
+    return;
+  }
+  res.status(404).send("404 - TinyLink does not exist");
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  const shortURL = req.params.shortURL;
+  if(urlDatabase[shortURL]) {
+    res.redirect(urlDatabase[shortURL]);
+    return;
+  }
+  res.status(404).send("404 - TinyLink does not exist");
 });
 
 app.get("/hello", (req, res) => {
