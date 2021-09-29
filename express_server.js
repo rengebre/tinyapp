@@ -7,11 +7,22 @@ const PORT = 8080; // default port 8080
 /****************************************/
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    user_id: "204"
+  },
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    user_id: "204"
+  }
 };
 
-const users = {};
+const users = {
+  "204": {
+    id: "123",
+    email: "russell_engebretson@hotmail.com",
+    password: "123"
+  }};
 
 // Global Functions
 /***************************************/
@@ -19,7 +30,7 @@ const users = {};
 // check if link already in our database. return the existing key if it is, undefined if not.
 const checkURLDatabase = function(link, dataObj) {
   for (const key in dataObj) {
-    if (dataObj[key] === link) {
+    if (dataObj[key].longURL === link) {
       return key;
     }
   }
@@ -75,6 +86,22 @@ const generateUserID = function(n) {
   return Math.floor((Math.random() * n) + 1);
 };
 
+const checkUserDatabase = function(id, email) {
+  if (id && !email) {
+    return false;
+  }
+  return true;
+};
+
+const cleanUpLeftoverCookies = function(id, email, res) {
+  if (!checkUserDatabase(id, email)) {
+    res.clearCookie('user_id');
+    res.status(400).send("Oops, looks like the user left and forgot his cookies :(.\nI cleaned them up for you, try again.");
+    return true;
+  }
+  return false;
+};
+
 // EXPRESS SETS... What to call these?
 /********************************************/
 
@@ -102,8 +129,19 @@ app.get("/", (req, res) => {
 app.get("/urls", (req, res) => {
   const id = req.cookies['user_id'];
   const email = getEmailFromUserID(id, users);
+
+  if (cleanUpLeftoverCookies(id, email, res)) {
+    return;
+  }
+
+  if (!id) {
+    res.redirect("/login");
+    return;
+  }
+
   const templateVars = {
     urls: urlDatabase,
+    id,
     email
   };
   res.render("urls_index", templateVars);
@@ -111,20 +149,30 @@ app.get("/urls", (req, res) => {
 
 // POST request for /urls -> creating new shortURL
 app.post("/urls", (req, res) => {
+  const id = req.cookies['user_id'];
+  const email = getEmailFromUserID(id, users);
   let shortURL = generateRandomString(6);
   let longURL = req.body.longURL;
-
-  // check if website entered starts with http:\\, if not, add it for redirect method
-  // if (longURL.trim().slice(7) !== "http://") {
-  //   longURL = "http://" + longURL;
-  // }
   longURL = checkLeadingHttp(longURL);
 
+  if (!checkUserDatabase(id, email)) {
+    return;
+  }
+
+  if (!id) {
+    res.redirect("/urls");
+    return;
+  }
+
   // check if website link already has an existing shortURL, act accordingly
-  let checkKey = checkURLDatabase(req.body.longURL, urlDatabase);
+  let checkKey = checkURLDatabase(longURL, urlDatabase);
 
   if (!checkKey) {
-    urlDatabase[shortURL] = longURL;
+    urlDatabase[shortURL] = {
+      longURL,
+      user_id: id
+    }
+    console.log(urlDatabase);
     res.redirect(`/urls/${shortURL}`);
   } else {
     res.redirect(`/urls/${checkKey}`);
@@ -135,6 +183,16 @@ app.post("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   const id = req.cookies['user_id'];
   const email = getEmailFromUserID(id, users);
+
+  if (cleanUpLeftoverCookies(id, email, res)) {
+    return;
+  }
+
+  if (!id) {
+    res.redirect("/login");
+    return;
+  }
+
   const templateVars = {
     email
   };
@@ -147,10 +205,19 @@ app.get("/urls/:shortURL", (req, res) => {
   const id = req.cookies['user_id'];
   const email = getEmailFromUserID(id, users);
 
+  if (cleanUpLeftoverCookies(id, email, res)) {
+    return;
+  }
+
+  if (!id) {
+    res.redirect("/login");
+    return;
+  }
+
   if (urlDatabase[shortURL]) {
     const templateVars = {
       shortURL,
-      longURL: urlDatabase[shortURL],
+      longURL: urlDatabase[shortURL].longURL,
       email
     };
     res.render('urls_show', templateVars);
@@ -163,7 +230,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   const shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
-    res.redirect(urlDatabase[shortURL]);
+    res.redirect(urlDatabase[shortURL].longURL);
     return;
   }
   res.status(404).send("404 - TinyLink does not exist");
@@ -175,7 +242,7 @@ app.post("/urls/:id", (req, res) => {
   const longURL = req.body.longURL;
 
   if (urlDatabase[shortURL]) {
-    urlDatabase[shortURL] = checkLeadingHttp(longURL);
+    urlDatabase[shortURL].longURL = checkLeadingHttp(longURL);
   }
   res.redirect("/urls");
 });
