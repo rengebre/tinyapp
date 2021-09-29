@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <%- include("./partials/_head") %>
+  </head>
+  <body>
+    <header style="padding-bottom: 20px;">
+      <%- include("./partials/_header") %>
+    </header>
+      <div class="card" style="width: 20%; margin: auto;">
+        <div class="card-header">
+          <h5 class="card-title">Login</h5>
+        </div>
+        <div class="card-body">
+          <div style="width: auto;">
+            <form action="/login" method="POST">
+              <div class="form-group">
+                <label for="Email">Email address</label>
+                <input type="email" class="form-control" name="email" aria-describedby="emailHelp" placeholder="Enter email">
+                <small id="emailHelp" class="form-text text-muted">We'll never share your email with anyone else.</small>
+              </div>
+              <div class="form-group">
+                <label for="exampleInputPassword1">Password</label>
+                <input type="password" class="form-control" name="password" placeholder="Password">
+              </div>
+              <!-- <div class="form-check">
+                <input type="checkbox" class="form-check-input" id="exampleCheck1">
+                <label class="form-check-label" for="exampleCheck1">Check me out</label>
+              </div> -->
+              <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div><small>Don't have an account? <a href="/register">Sign up here</a></small></div>
+        </div>
+  </body>
+</html>
