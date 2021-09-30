@@ -134,10 +134,10 @@ app.get("/urls", (req, res) => {
     return;
   }
 
-  if (!id) {
-    res.redirect("/login");
-    return;
-  }
+  // if (!id) {
+  //   res.redirect("/login");
+  //   return;
+  // }
 
   const templateVars = {
     urls: urlDatabase,
@@ -172,11 +172,9 @@ app.post("/urls", (req, res) => {
       longURL,
       user_id: id
     }
-    console.log(urlDatabase);
-    res.redirect(`/urls/${shortURL}`);
-  } else {
-    res.redirect(`/urls/${checkKey}`);
   }
+  
+  res.redirect("/urls");
 });
 
 // GET: request for new URL page
@@ -238,24 +236,30 @@ app.get("/u/:shortURL", (req, res) => {
 
 // POST: update longURL if edited
 app.post("/urls/:id", (req, res) => {
+  const id = req.cookies["user_id"];
   const shortURL = req.params.id;
   const longURL = req.body.longURL;
 
-  if (urlDatabase[shortURL]) {
+  if (urlDatabase[shortURL] && urlDatabase[shortURL].user_id === id) {
     urlDatabase[shortURL].longURL = checkLeadingHttp(longURL);
+    res.redirect("/urls");
+    return;
   }
-  res.redirect("/urls");
+
+  res.status(403).send("You can't edit a URL you don't own... bully");
 });
 
 // POST: request to delete a shortURL/longURL combo in our "database"
 app.post("/urls/:shortURL/delete", (req, res) =>{
   const shortURL = req.params.shortURL;
-  if (urlDatabase[shortURL]) {
+  const id = req.cookies["user_id"];
+
+  if (urlDatabase[shortURL] && urlDatabase[shortURL].user_id === id) {
     delete urlDatabase[shortURL];
     res.redirect("/urls");
     return;
   }
-  res.status(404).send("404 - How you get here?? (⊙_☉)");
+  res.status(403).send("Sorry, but you can't delete a URL you don't own.... bully");
 });
 
 // GET: if the user is trying to manually access delete page, catch this and ponder their life choices
