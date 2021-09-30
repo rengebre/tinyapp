@@ -129,11 +129,19 @@ app.use(cookieSession({
   keys: ["to infinity and beyond", "This is a second key"]
 }))
 
+
 // ROUTE CONTROL
 /*******************************************/
 
 // GET: redirect to urls if trying to access the home page
 app.get("/", (req, res) => {
+  const id = req.session.user_id;
+
+  if (!id) {
+    res.redirect("/login");
+    return;
+  }
+
   res.redirect("/urls");
 });
 
@@ -173,7 +181,7 @@ app.post("/urls", (req, res) => {
   }
 
   if (!id) {
-    res.redirect("/urls");
+    res.status(403).send("And here you thought you could be sneaky. If you want to use our service, you will need to give us all of your information :D");
     return;
   }
 
@@ -224,6 +232,10 @@ app.get("/urls/:shortURL", (req, res) => {
     res.redirect("/login");
     return;
   }
+
+  if (urlDatabase[shortURL].user_id !== id) {
+    res.status(403).send("Stop trying to alter other people's stuff. So rude.");
+  };
 
   if (urlDatabase[shortURL]) {
     const templateVars = {
@@ -374,7 +386,6 @@ app.post("/register", (req, res) => {
       password: hashedPassword
     };
 
-    console.log(users);
     req.session.user_id = id;
     res.redirect("/urls");
   }
