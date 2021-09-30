@@ -17,7 +17,7 @@ const {
 
 const app = express();
 // default port 8080
-const PORT = 8080; 
+const PORT = 8080;
 // set our template engine
 app.set('view engine', 'ejs');
 
@@ -56,7 +56,7 @@ app.use(express.urlencoded({extended: true}));
 app.use(cookieSession({
   name: "session",
   keys: ["to infinity and beyond", "This is a second key"]
-}))
+}));
 
 
 // ROUTE CONTROL
@@ -121,7 +121,7 @@ app.post("/urls", (req, res) => {
     urlDatabase[shortURL] = {
       longURL,
       user_id: id
-    }
+    };
   }
   
   res.redirect("/urls");
@@ -164,7 +164,7 @@ app.get("/urls/:shortURL", (req, res) => {
 
   if (urlDatabase[shortURL].user_id !== id) {
     res.status(403).send("Stop trying to alter other people's stuff. So rude.");
-  };
+  }
 
   if (urlDatabase[shortURL]) {
     const templateVars = {
@@ -181,7 +181,6 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // GET: redirect to the longURL linked to shortURL
 app.get("/u/:shortURL", (req, res) => {
-  const id = req.session.user_id;
   const shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
     res.redirect(urlDatabase[shortURL].longURL);

@@ -60,7 +60,7 @@ const generateUserID = function(n) {
   return Math.floor((Math.random() * n) + 1);
 };
 
-// simple check if an email/id combo is in the database. 
+// simple check if an email/id combo is in the database.
 const checkUserDatabase = function(id, email) {
   if (id && !email) {
     return false;
@@ -87,4 +87,4 @@ module.exports = {
   getUserIDFromEmail,
   generateUserID,
   cleanUpLeftoverCookies
-}
+};
