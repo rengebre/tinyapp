@@ -134,11 +134,6 @@ app.get("/urls", (req, res) => {
     return;
   }
 
-  // if (!id) {
-  //   res.redirect("/login");
-  //   return;
-  // }
-
   const templateVars = {
     urls: urlDatabase,
     id,
@@ -218,6 +213,7 @@ app.get("/urls/:shortURL", (req, res) => {
       longURL: urlDatabase[shortURL].longURL,
       email
     };
+    
     res.render('urls_show', templateVars);
     return;
   }
@@ -226,12 +222,13 @@ app.get("/urls/:shortURL", (req, res) => {
 
 // GET: redirect to the longURL linked to shortURL
 app.get("/u/:shortURL", (req, res) => {
+  const id = req.cookies["user_id"];
   const shortURL = req.params.shortURL;
   if (urlDatabase[shortURL]) {
     res.redirect(urlDatabase[shortURL].longURL);
     return;
   }
-  res.status(404).send("404 - TinyLink does not exist");
+  res.status(404).send("404 - The tinyLink does not exist");
 });
 
 // POST: update longURL if edited
