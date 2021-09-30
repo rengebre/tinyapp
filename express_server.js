@@ -1,7 +1,15 @@
 const express = require("express");
 const cookieParser = require('cookie-parser');
+const bcrypt = require('bcryptjs');
+
+// EXPRESS SETS... What to call these?
+/********************************************/
+
 const app = express();
-const PORT = 8080; // default port 8080
+// default port 8080
+const PORT = 8080; 
+// set our template engine
+app.set('view engine', 'ejs');
 
 // Global variables
 /****************************************/
@@ -19,9 +27,9 @@ const urlDatabase = {
 
 const users = {
   "204": {
-    id: "123",
+    id: 204,
     email: "russell_engebretson@hotmail.com",
-    password: "123"
+    password: "$2a$10$sanl.jofbVbbNDL6i.4go.ngLi2WugCP7TvtgXbhwT1noxtW7jeOW"
   }};
 
 // Global Functions
@@ -86,6 +94,7 @@ const generateUserID = function(n) {
   return Math.floor((Math.random() * n) + 1);
 };
 
+// simple check if an email/id combo is in the database. 
 const checkUserDatabase = function(id, email) {
   if (id && !email) {
     return false;
@@ -93,6 +102,7 @@ const checkUserDatabase = function(id, email) {
   return true;
 };
 
+// Used to check if cookies are present any time the server restarts. Cleans them up otherwise.
 const cleanUpLeftoverCookies = function(id, email, res) {
   if (!checkUserDatabase(id, email)) {
     res.clearCookie('user_id');
@@ -102,11 +112,6 @@ const cleanUpLeftoverCookies = function(id, email, res) {
   return false;
 };
 
-// EXPRESS SETS... What to call these?
-/********************************************/
-
-// set our template engine
-app.set('view engine', 'ejs');
 
 // MIDDLEWARE:
 /********************************************/
@@ -213,7 +218,7 @@ app.get("/urls/:shortURL", (req, res) => {
       longURL: urlDatabase[shortURL].longURL,
       email
     };
-    
+
     res.render('urls_show', templateVars);
     return;
   }
@@ -299,7 +304,7 @@ app.post("/login", (req, res) => {
     return;
   }
 
-  if (users[id].email === email && users[id].password === password) {
+  if (users[id].email === email && bcrypt.compareSync(password, users[id].password)) {
     res.cookie('user_id', id);
     res.redirect('/urls');
     return;
@@ -335,6 +340,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   const email = req.body.email;
   const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const id = generateUserID(2000);
 
   if (!email || !password) {
@@ -351,9 +357,10 @@ app.post("/register", (req, res) => {
     users[id] = {
       id,
       email,
-      password
+      password: hashedPassword
     };
 
+    console.log(users);
     res.cookie('user_id', id);
     res.redirect("/urls");
   }
