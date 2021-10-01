@@ -60,8 +60,8 @@ const generateUserID = function(n) {
   return Math.floor((Math.random() * n) + 1);
 };
 
-// simple check if an email/id combo is in the database.
-const checkUserDatabase = function(id, email) {
+// simple check if an email/id exist, used in multiple places, extracted it
+const checkUserEmailAndID = function(id, email) {
   if (id && !email) {
     return false;
   }
@@ -69,9 +69,9 @@ const checkUserDatabase = function(id, email) {
 };
 
 // Used to check if cookies are present any time the server restarts. Cleans them up otherwise.
-const cleanUpLeftoverCookies = function(id, email, res) {
-  if (!checkUserDatabase(id, email)) {
-    res.clearCookie('user_id');
+const cleanUpLeftoverCookies = function(id, email, res, req) {
+  if (!checkUserEmailAndID(id, email)) {
+    req.session = null;
     res.status(400).send("Oops, looks like the user left and forgot his cookies :(.\nI cleaned them up for you, try again.");
     return true;
   }
@@ -80,7 +80,7 @@ const cleanUpLeftoverCookies = function(id, email, res) {
 
 module.exports = {
   checkURLDatabase,
-  checkUserDatabase,
+  checkUserEmailAndID,
   checkLeadingHttp,
   generateRandomString,
   getEmailFromUserID,

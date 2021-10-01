@@ -3,7 +3,7 @@ const cookieSession = require('cookie-session');
 const bcrypt = require('bcryptjs');
 const {
   checkURLDatabase,
-  checkUserDatabase,
+  checkUserEmailAndID,
   checkLeadingHttp,
   generateRandomString,
   generateUserID,
@@ -79,7 +79,7 @@ app.get("/urls", (req, res) => {
   const id = req.session.user_id;
   const email = getEmailFromUserID(id, users);
 
-  if (cleanUpLeftoverCookies(id, email, res)) {
+  if (cleanUpLeftoverCookies(id, email, res, req)) {
     return;
   }
 
@@ -105,7 +105,7 @@ app.post("/urls", (req, res) => {
 
   longURL = checkLeadingHttp(longURL);
 
-  if (!checkUserDatabase(id, email)) {
+  if (!checkUserEmailAndID(id, email)) {
     return;
   }
 
@@ -132,7 +132,7 @@ app.get("/urls/new", (req, res) => {
   const id = req.session.user_id;
   const email = getEmailFromUserID(id, users);
 
-  if (cleanUpLeftoverCookies(id, email, res)) {
+  if (cleanUpLeftoverCookies(id, email, res, req)) {
     return;
   }
 
@@ -153,7 +153,7 @@ app.get("/urls/:shortURL", (req, res) => {
   const id = req.session.user_id;
   const email = getEmailFromUserID(id, users);
 
-  if (cleanUpLeftoverCookies(id, email, res)) {
+  if (cleanUpLeftoverCookies(id, email, res, req)) {
     return;
   }
 
@@ -218,7 +218,7 @@ app.get("/urls/:shortURL/delete", (req, res) =>{
   res.status(404).send("404 - Why?... just, why? (⊙_☉)");
 });
 
-// User Login/Registry/authentication
+// USER AUTHENTICATION ROUTES
 
 // GET: retrieve login page if not logged in
 app.get("/login", (req, res) => {
