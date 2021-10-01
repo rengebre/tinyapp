@@ -157,13 +157,9 @@ app.get("/urls/:shortURL", (req, res) => {
     return;
   }
 
-  if (!id) {
-    res.redirect("/login");
-    return;
-  }
-
-  if (urlDatabase[shortURL].user_id !== id) {
+  if (urlDatabase[shortURL].user_id !== id || !id) {
     res.status(403).send("Stop trying to alter other people's stuff. So rude.");
+    return;
   }
 
   if (urlDatabase[shortURL]) {
